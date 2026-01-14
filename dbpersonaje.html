@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Creación de Personaje</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap">
+    <style>
+        :root {
+            --parchment: #f5e9d4;
+            --parchment-dark: #e8d9b5;
+            --parchment-light: #faf3e6;
+            --dark-green: #2d5016;
+            --forest-green: #3a6633;
+            --gold: #c9a959;
+            --gold-light: #e6d8a9;
+            --rust: #b3543a;
+            --rust-light: #d48772;
+            --brown: #5c4033;
+            --brown-light: #8b7355;
+            --black: #1a1a1a;
+            --shadow: rgba(0, 0, 0, 0.25);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'EB Garamond', serif;
+            background-color: #2a2a2a;
+            color: var(--black);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .app-container {
+            background-color: var(--parchment);
+            background-image: 
+                linear-gradient(to bottom, transparent 95%, rgba(92, 64, 51, 0.1) 100%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" opacity="0.03"><path d="M20,100 Q40,80 60,100 T100,80" stroke="%235c4033" fill="none" stroke-width="1"/></svg>');
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            border: 15px solid transparent;
+            border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0,20 Q0,0 20,0 L80,0 Q100,0 100,20 L100,80 Q100,100 80,100 L20,100 Q0,100 0,80 Z" fill="%232d5016" stroke="%23c9a959" stroke-width="3"/></svg>') 30 stretch;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--dark-green);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-family: 'MedievalSharp', cursive;
+            font-size: 3rem;
+            text-shadow: 2px 2px 0px var(--gold);
+            border-bottom: 3px double var(--gold);
+            padding-bottom: 15px;
+            margin-top: 10px;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            border-bottom: 1px dashed var(--brown);
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        
+        .phase-container {
+            display: none;
+            position: relative;
+        }
+        
+        .phase-container.active {
+            display: block;
+            animation: parchmentFadeIn 0.5s ease;
+        }
+        
+        @keyframes parchmentFadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .phase-title {
+            font-size: 1.8rem;
+            color: var(--dark-green);
+            font-family: 'Cinzel', serif;
+        }
+        
+        .phase-indicator {
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            color: var(--dark-green);
+            background-color: rgba(201, 169, 89, 0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--gold);
+        }
+        
+        .progress-container {
+            margin: 25px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: var(--parchment-dark);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--brown);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--dark-green), var(--forest-green));
+            transition: width 0.5s ease;
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.3);
+            width: 20%;
+        }
+        
+        .progress-text {
+            display: block;
+            text-align: center;
+            margin-top: 8px;
+            font-family: 'Cinzel', serif;
+            color: var(--dark-green);
+        }
+        
+        .character-basics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .parchment-card {
+            background-color: rgba(232, 217, 181, 0.7);
+            border-radius: 8px;
+            border: 1px solid var(--gold);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .parchment-card:hover {
+            border-color: var(--dark-green);
+            box-shadow: 0 5px 15px rgba(45, 80, 22, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .option-group {
+            margin-bottom: 20px;
+        }
+        
+        .option-title {
+            font-weight: bold;
+            color: var(--dark-green);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .option-description {
+            font-style: italic;
+            color: var(--brown);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            border-left: 3px solid var(--gold);
+        }
+        
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .option {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            padding: 12px 8px;
+            background-color: var(--parchment-dark);
+            border: 2px solid var(--brown);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'EB Garamond', serif;
+            font-weight: bold;
+        }
+        
+        .option:hover {
+            background-color: var(--gold-light);
+            transform: translateY(-3px);
+        }
+        
+        .option.selected {
+            background-color: var(--dark-green);
+            color: white;
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(201, 169, 89, 0.5);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-medieval {
+            background-color: var(--dark-green);
+            color: white;
+            border: 2px solid var(--gold);
+        }
+        
+        .btn-medieval:hover {
+            background-color: var(--gold);
+            color: var(--dark-green);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+        
+        .btn-secondary {
+            background-color: var(--brown);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--brown-light);
+            transform: translateY(-2px);
+        }
+        
+        .btn-random {
+            background-color: var(--rust);
+            color: white;
+        }
+        
+        .btn-random:hover {
+            background-color: var(--rust-light);
+            transform: translateY(-2px);
+        }
+        
+        .points-info {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(45, 80, 22, 0.1);
+            border-radius: 8px;
+            border: 1px dashed var(--dark-green);
+        }
+        
+        .attributes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .attribute {
+            background-color: rgba(232, 217, 181, 0.7);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--brown);
+            text-align: center;
+            position: relative;
+        }
+        
+        .attribute-key {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--gold);
+            color: var(--dark-green);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .attribute-name {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: var(--dark-green);
+            margin-bottom: 10px;
+        }
+        
+        .attribute-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--brown);
+            margin: 10px 0;
+        }
+        
+        .attribute-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .attr-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--dark-green);
+            background-color: var(--parchment);
+            color: var(--dark-green);
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .attr-btn:hover:not(:disabled) {
+            background-color: var(--dark-green);
+            color: white;
+        }
+        
+        .attr-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .max-btn, .random-attr-btn {
+            padding: 8px 15px;
+            background-color: var(--gold);
+            border: 1px solid var(--brown);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'EB Garamond', serif;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        
+        .max-btn:hover, .random-attr-btn:hover {
+            background-color: var(--dark-green);
+            color: white;
+        }
+        
+        .derived-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .derived-value {
+            background-color: rgba(201, 169, 89, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--gold);
+        }
+        
+        .derived-name {
+            font-weight: bold;
+            color: var(--dark-green);
+        }
+        
+        .derived-result {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--brown);
+            margin-top: 5px;
+        }
+        
+        .equipment-packs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .equipment-pack {
+            background-color: rgba(232, 217, 181, 0.7);
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .equipment-pack:hover {
+            border-color: var(--gold);
+            transform: translateY(-5px);
+        }
+        
+        .equipment-pack.selected {
+            border-color: var(--dark-green);
+            background-color: rgba(45, 80, 22, 0.1);
+            box-shadow: 0 0 15px rgba(45, 80, 22, 0.3);
+        }
+        
+        .equipment-pack h4 {
+            color: var(--dark-green);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .equipment-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .equipment-list li {
+            padding: 5px 0;
+            border-bottom: 1px dotted var(--brown);
+        }
+        
+        .equipment-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .skills-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(45, 80, 22, 0.1);
+            border-radius: 8px;
+        }
+        
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .skill {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--brown);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .skill:hover {
+            background-color: rgba(201, 169, 89, 0.3);
+        }
+        
+        .skill.trained {
+            background-color: rgba(45, 80, 22, 0.4);
+            border-color: var(--dark-green);
+            font-weight: bold;
+        }
+        
+        .skill.professional {
+            background-color: rgba(45, 80, 22, 0.15);
+            border-left: 5px solid var(--dark-green);
+        }
+        
+        .skill.professional.trained {
+            background-color: rgba(45, 80, 22, 0.6);
+            border-color: var(--dark-green);
+            font-weight: bold;
+        }
+        
+        .skill.required {
+            background-color: rgba(201, 169, 89, 0.5);
+            cursor: not-allowed;
+        }
+        
+        .skill-name {
+            font-weight: bold;
+        }
+        
+        .skill-value {
+            font-weight: bold;
+            color: var(--dark-green);
+            font-size: 1.2rem;
+        }
+        
+        .skill-group {
+            margin-top: 30px;
+        }
+        
+        .character-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--brown);
+            border-radius: 4px;
+            background-color: var(--parchment-light);
+            font-family: 'EB Garamond', serif;
+            font-size: 1.1rem;
+            color: var(--black);
+            transition: border 0.3s;
+            margin-top: 10px;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201, 169, 89, 0.3);
+        }
+        
+        .character-summary {
+            background-color: rgba(232, 217, 181, 0.9);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 2px solid var(--dark-green);
+            position: relative;
+            display: none;
+        }
+        
+        .character-summary.active {
+            display: block;
+            animation: parchmentFadeIn 0.8s ease;
+        }
+        
+        .summary-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .summary-section {
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--gold);
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--gold);
+        }
+        
+        .nav-btn {
+            padding: 12px 30px;
+            background-color: var(--dark-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background-color: var(--gold);
+            color: var(--dark-green);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .random-all-btn {
+            background-color: var(--rust);
+            color: white;
+        }
+        
+        .export-btn {
+            background-color: var(--gold);
+            color: var(--dark-green);
+            font-weight: bold;
+        }
+        
+        .alert {
+            padding: 15px;
+            background-color: rgba(201, 169, 89, 0.3);
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .alert.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            h2 {
+                font-size: 1.7rem;
+            }
+            
+            .option {
+                min-width: 100px;
+            }
+            
+            .attribute-controls {
+                gap: 10px;
+            }
+            
+            .attr-btn {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .app-container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .character-basics {
+                grid-template-columns: 1fr;
+            }
+            
+            .attributes-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .skills-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .app-container,
+            .app-container * {
+                visibility: visible;
+            }
+            
+            .app-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: 100%;
+                border: none;
+                box-shadow: none;
+                padding: 15px;
+            }
+            
+            .nav-btn,
+            .btn,
+            .option,
+            .attr-btn,
+            .max-btn,
+            .random-attr-btn,
+            .form-input,
+            .form-select,
+            .equipment-pack,
+            .skill {
+                display: none !important;
+            }
+            
+            .phase-container:not(.active),
+            .character-summary:not(.active) {
+                display: none !important;
+            }
+            
+            .character-summary.active {
+                display: block !important;
+                page-break-inside: avoid;
+            }
+            
+            .summary-section {
+                page-break-inside: avoid;
+            }
+            
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
+        }
+        
+        .magic-note {
+            background-color: rgba(201, 169, 89, 0.3);
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .skill-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .skill-table th {
+            background-color: rgba(45, 80, 22, 0.2);
+            color: var(--dark-green);
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .skill-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(92, 64, 51, 0.2);
+        }
+        
+        .skill-table tr:hover {
+            background-color: rgba(201, 169, 89, 0.1);
+        }
+        
+        .skill-trained {
+            font-weight: bold;
+            color: var(--dark-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>DB Creación de Personaje</h1>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <span class="progress-text">Fase <span id="current-phase">1</span> de 5</span>
+        </div>
+        
+        <!-- Fase 1: Raza, Profesión y Edad -->
+        <div id="phase-1" class="phase-container active">
+            <div class="phase-header">
+                <h2 class="phase-title">Fase 1: Origen y Esencia</h2>
+                <span class="phase-indicator">Fase 1 de 5</span>
+            </div>
+            
+            <div class="character-basics">
+                <div class="parchment-card">
+                    <div class="option-group">
+                        <div class="option-title">
+                            <span>Raza</span>
+                            <button class="btn btn-random" onclick="randomRace()">Aleatorio</button>
+                        </div>
+                        <div class="options" id="race-options">
+                            <!-- Las opciones se generan con JavaScript -->
+                        </div>
+                        <div class="option-description" id="race-description">
+                            Selecciona una raza para ver su capacidad innata.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="parchment-card">
+                    <div class="option-group">
+                        <div class="option-title">
+                            <span>Profesión</span>
+                            <button class="btn btn-random" onclick="randomProfession()">Aleatorio</button>
+                        </div>
+                        <div class="options" id="profession-options">
+                            <!-- Las opciones se generan con JavaScript -->
+                        </div>
+                        <div class="option-description" id="profession-description">
+                            Selecciona una profesión para ver su atributo clave y capacidad heroica.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="parchment-card">
+                    <div class="option-group">
+                        <div class="option-title">
+                            <span>Edad</span>
+                            <button class="btn btn-random" onclick="randomAge()">Aleatorio</button>
+                        </div>
+                        <div class="options" id="age-options">
+                            <!-- Las opciones se generan con JavaScript -->
+                        </div>
+                        <div class="option-description" id="age-description">
+                            Selecciona una edad para ver sus efectos.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn random-all-btn" onclick="randomAll()">Todo Aleatorio</button>
+                <button class="nav-btn btn-medieval" onclick="nextPhase()">Siguiente →</button>
+            </div>
+        </div>
+        
+        <!-- Fase 2: Atributos -->
+        <div id="phase-2" class="phase-container">
+            <div class="phase-header">
+                <h2 class="phase-title">Fase 2: Atributos</h2>
+                <span class="phase-indicator">Fase 2 de 5</span>
+            </div>
+            
+            <div class="points-info">
+                Puntos disponibles para repartir: <span id="points-available">60</span>/60
+                <div>
+                    <button class="btn btn-random random-attr-btn" onclick="randomAttributes()">Reparto Aleatorio</button>
+                </div>
+            </div>
+            
+            <div class="attributes-container" id="attributes-container">
+                <!-- Los atributos se generan con JavaScript -->
+            </div>
+            
+            <div class="derived-values" id="derived-values">
+                <!-- Los valores derivados se generan con JavaScript -->
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn btn-secondary" onclick="prevPhase()">← Anterior</button>
+                <button class="nav-btn btn-medieval" onclick="nextPhase()">Siguiente →</button>
+            </div>
+        </div>
+        
+        <!-- Fase 3: Equipo -->
+        <div id="phase-3" class="phase-container">
+            <div class="phase-header">
+                <h2 class="phase-title">Fase 3: Equipo</h2>
+                <span class="phase-indicator">Fase 3 de 5</span>
+            </div>
+            
+            <p>Selecciona uno de los paquetes de equipo disponibles para tu profesión:</p>
+            
+            <div class="equipment-packs" id="equipment-packs">
+                <!-- Los paquetes de equipo se generan con JavaScript -->
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn btn-secondary" onclick="prevPhase()">← Anterior</button>
+                <button class="nav-btn btn-medieval" onclick="nextPhase()">Siguiente →</button>
+            </div>
+        </div>
+        
+        <!-- Fase 4: Habilidades -->
+        <div id="phase-4" class="phase-container">
+            <div class="phase-header">
+                <h2 class="phase-title">Fase 4: Habilidades</h2>
+                <span class="phase-indicator">Fase 4 de 5</span>
+            </div>
+            
+            <div class="skills-info" id="skills-info">
+                <!-- La información de habilidades se genera con JavaScript -->
+            </div>
+            
+            <div class="skills-container" id="skills-container">
+                <!-- Las habilidades se generan con JavaScript -->
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn btn-secondary" onclick="prevPhase()">← Anterior</button>
+                <button class="nav-btn btn-medieval" onclick="nextPhase()">Siguiente →</button>
+            </div>
+        </div>
+        
+        <!-- Fase 5: Características Finales -->
+        <div id="phase-5" class="phase-container">
+            <div class="phase-header">
+                <h2 class="phase-title">Fase 5: Características Finales</h2>
+                <span class="phase-indicator">Fase 5 de 5</span>
+            </div>
+            
+            <div class="character-details">
+                <div class="parchment-card">
+                    <div class="option-title">
+                        <span>Nombre del Personaje</span>
+                    </div>
+                    <input type="text" class="form-input" id="character-name" placeholder="Escribe el nombre de tu personaje">
+                </div>
+                
+                <div class="parchment-card">
+                    <div class="option-title">
+                        <span>Debilidad</span>
+                        <button class="btn btn-random" onclick="randomWeakness()">Aleatorio</button>
+                    </div>
+                    <select class="form-select" id="weakness-select">
+                        <!-- Las debilidades se generan con JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="parchment-card">
+                    <div class="option-title">
+                        <span>Apariencia</span>
+                        <button class="btn btn-random" onclick="randomAppearance()">Aleatorio</button>
+                    </div>
+                    <select class="form-select" id="appearance-select">
+                        <!-- Las apariencias se generan con JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="parchment-card">
+                    <div class="option-title">
+                        <span>Recuerdo</span>
+                        <button class="btn btn-random" onclick="randomMemory()">Aleatorio</button>
+                    </div>
+                    <select class="form-select" id="memory-select">
+                        <!-- Los recuerdos se generan con JavaScript -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="alert" id="export-alert">
+                ¡Personaje completado! Ya puedes ver el resumen y exportar tu ficha.
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn btn-secondary" onclick="prevPhase()">← Anterior</button>
+                <button class="nav-btn btn-medieval export-btn" onclick="showSummary()">Ver Resumen y Exportar</button>
+            </div>
+        </div>
+        
+        <!-- Resumen del Personaje -->
+        <div id="character-summary" class="character-summary">
+            <div class="summary-header">
+                <h2>Ficha de Personaje - DB</h2>
+                <h3 id="summary-name">Nombre del Personaje</h3>
+            </div>
+            
+            <div class="summary-grid">
+                <div class="summary-section">
+                    <h4>Información Básica</h4>
+                    <p><strong>Raza:</strong> <span id="summary-race"></span></p>
+                    <p><strong>Capacidad Innata:</strong> <span id="summary-innate"></span></p>
+                    <p><strong>Profesión:</strong> <span id="summary-profession"></span></p>
+                    <p><strong>Capacidad Heroica:</strong> <span id="summary-heroic"></span></p>
+                    <div id="summary-magic-note"></div>
+                    <p><strong>Edad:</strong> <span id="summary-age"></span></p>
+                    <p><strong>Nombre:</strong> <span id="summary-name-text"></span></p>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>Atributos</h4>
+                    <p><strong>FUE:</strong> <span id="summary-fue"></span></p>
+                    <p><strong>CON:</strong> <span id="summary-con"></span></p>
+                    <p><strong>AGI:</strong> <span id="summary-agi"></span></p>
+                    <p><strong>INT:</strong> <span id="summary-int"></span></p>
+                    <p><strong>VOL:</strong> <span id="summary-vol"></span></p>
+                    <p><strong>CAR:</strong> <span id="summary-car"></span></p>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>Valores Derivados</h4>
+                    <p><strong>PG (Puntos de Golpe):</strong> <span id="summary-pg"></span></p>
+                    <p><strong>PV (Puntos de Voluntad):</strong> <span id="summary-pv"></span></p>
+                    <p><strong>Bonif. Daño FUE:</strong> <span id="summary-dmg-fue"></span></p>
+                    <p><strong>Bonif. Daño AGI:</strong> <span id="summary-dmg-agi"></span></p>
+                    <p><strong>Movimiento:</strong> <span id="summary-move"></span></p>
+                    <p><strong>Límite de Carga:</strong> <span id="summary-carry"></span></p>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>Habilidades</h4>
+                    <div id="summary-all-skills"></div>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>Equipo</h4>
+                    <div id="summary-equipment"></div>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>Características</h4>
+                    <p><strong>Debilidad:</strong> <span id="summary-weakness"></span></p>
+                    <p><strong>Apariencia:</strong> <span id="summary-appearance"></span></p>
+                    <p><strong>Recuerdo:</strong> <span id="summary-memory"></span></p>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button class="nav-btn btn-secondary" onclick="hideSummary()">Volver a Editar</button>
+                <button class="nav-btn btn-medieval" onclick="window.print()">Imprimir Personaje</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos del juego
+        const gameData = {
+            races: [
+                { id: 'human', name: 'Humano', innate: 'Flexible' },
+                { id: 'halfling', name: 'Halfling', innate: 'Escurridizo' },
+                { id: 'dwarf', name: 'Enano', innate: 'Vengativo' },
+                { id: 'elf', name: 'Elfo', innate: 'Paz Interior' },
+                { id: 'anatida', name: 'Anátida', innate: 'Furibundo y Palmípedo' },
+                { id: 'lupino', name: 'Lupino', innate: 'Instinto de Caza' }
+            ],
+            
+            professions: [
+                { id: 'artesano', name: 'Artesano', keyAttr: 'FUE', heroic: 'Maestro carpintero, curtidor o herrero (a elegir una)' },
+                { id: 'bardo', name: 'Bardo', keyAttr: 'CAR', heroic: 'Músico' },
+                { id: 'caballero', name: 'Caballero', keyAttr: 'FUE', heroic: 'Protector' },
+                { id: 'cazador', name: 'Cazador', keyAttr: 'AGI', heroic: 'Compañero animal' },
+                { id: 'erudito', name: 'Erudito', keyAttr: 'INT', heroic: 'Intuición' },
+                { id: 'guerrero', name: 'Guerrero', keyAttr: 'FUE', heroic: 'Veterano' },
+                { id: 'ladron', name: 'Ladrón', keyAttr: 'AGI', heroic: 'Apuñalar por la espalda' },
+                { id: 'mago_animista', name: 'Mago Animista', keyAttr: 'VOL', heroic: 'Animismo' },
+                { id: 'mago_elementalista', name: 'Mago Elementalista', keyAttr: 'VOL', heroic: 'Elementalismo' },
+                { id: 'mago_mentalista', name: 'Mago Mentalista', keyAttr: 'VOL', heroic: 'Mentalismo' },
+                { id: 'marinero', name: 'Marinero', keyAttr: 'AGI', heroic: 'Piernas de mar' },
+                { id: 'mercader', name: 'Mercader', keyAttr: 'CAR', heroic: 'Cazatesoros' }
+            ],
+            
+            ages: [
+                { id: 'young', name: 'Joven', desc: 'Tendrás más agilidad y constitución. Entrena 8 habilidades (6 prof. + 2 libres).', minValues: { FUE: 3, CON: 4, AGI: 4, INT: 3, VOL: 3, CAR: 3 }, skillBonus: 2 },
+                { id: 'adult', name: 'Adulto', desc: 'Sin modificadores. Entrena 10 habilidades (6 prof. + 4 libres).', minValues: { FUE: 3, CON: 3, AGI: 3, INT: 3, VOL: 3, CAR: 3 }, skillBonus: 4 },
+                { id: 'old', name: 'Viejo', desc: 'Tendrás menos fuerza, agilidad y constitución, pero más inteligencia y voluntad además de más habilidades entrenadas. Entrena 12 habilidades (6 prof. + 6 libres).', minValues: { FUE: 1, CON: 1, AGI: 1, INT: 4, VOL: 4, CAR: 3 }, skillBonus: 6 }
+            ],
+            
+            equipmentPacks: {
+                artesano: [
+                    'Martillo de guerra (pequeño), Armadura de cuero, Herramientas de herrero, Antorcha, Yesca y pedernal, D8 raciones de comida, D8 monedas de plata.',
+                    'Hacha de mano, Armadura de cuero, Herramientas de carpintero, Antorcha, Cuerda de cáñamo, Yesca y pedernal, D8 raciones de comida, D8 monedas de plata.',
+                    'Cuchillo, Armadura de cuero, Herramientas de curtidor, Linterna, Aceite de lámpara, Yesca y pedernal, D8 raciones de comida, D8 monedas de plata.'
+                ],
+                bardo: [
+                    'Lira, Cuchillo, Lámpara, Aceite de lámpara, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Flauta, Daga, Cuerda de cáñamo, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Cuerno, Cuchillo, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.'
+                ],
+                caballero: [
+                    'Espada ancha o lucero del alba, Escudo (pequeño), Armadura de placas, Yelmo, Antorcha, Yesca y pedernal, D6 raciones de comida, D12 monedas de plata.',
+                    'Mayal o martillo de guerra (pequeño), Escudo (pequeño), Cota de mallas, Casco, Antorcha, Yesca y pedernal, D6 raciones de comida, D12 monedas de plata.',
+                    'Espada corta, Lanza, Escudo (pequeño), Cota de malla, Casco, Caballo entrenado en combate, D6 raciones de comida, D12 monedas de plata.'
+                ],
+                cazador: [
+                    'Daga, Arco corto, Carcaj, Armadura de cuero, Piel para dormir, Trampa de lazo, Antorcha, Yesca y pedernal, Cuerda de cáñamo, D8 raciones de comida, D6 monedas de plata.',
+                    'Cuchillo, Arco largo, Carcaj, Armadura de cuero, Piel para dormir, Caña de pescar, Antorcha, Yesca y pedernal, Cuerda de cáñamo, D8 raciones de comida, D6 monedas de plata.',
+                    'Daga, Honda, Armadura de cuero, Piel para dormir, Trampa de lazo, Antorcha, Yesca y pedernal, Cuerda de cáñamo, D8 raciones de comida, D6 monedas de plata.'
+                ],
+                erudito: [
+                    'Vara, Cuaderno, Pluma, Piel para dormir, Antorcha, Yesca y pedernal, D6 raciones de comida, D10 monedas de plata.',
+                    'Cuchillo, Libro (de cualquier tema), Piel para dormir, Lámpara, Aceite de lámpara, Yesca y pedernal, D6 raciones de comida, D10 monedas de plata.',
+                    'Espada corta, Vendas, Una dosis de somnífero, Piel para dormir, Linterna, Aceite para lámparas, Yesca y pedernal, D6 raciones de comida, D10 monedas de plata.'
+                ],
+                guerrero: [
+                    'Espada ancha, Hacha de batalla o maza de armas; Escudo pequeño, Cota de malla, Antorcha, Yesca y pedernal, D6 raciones de comida, D6 monedas de plata.',
+                    'Espada corta, Hacha de mano o lanza corta; Ballesta ligera, Carcaj, Armadura de cuero, Antorcha, Yesca y pedernal, D6 raciones de comida, D6 monedas de plata.',
+                    'Lanza larga, Armadura de cuero tachonado, Casco, Antorcha, Yesca y pedernal, D6 raciones de comida, D6 monedas de plata.'
+                ],
+                ladron: [
+                    'Daga, Honda, Cuerda de cáñamo, Arpeo, Antorcha, Yesca y pedernal, D6 raciones de comida, D10 monedas de plata.',
+                    'Cuchillo, Ganzúas simples, Antorcha, Yesca y pedernal, D6 raciones de comida, D10 monedas de plata.',
+                    'Dos dagas, Canicas, Antorcha, Yesca y pedernal, D6 raciones de comida, D10 monedas de plata.'
+                ],
+                mago_animista: [
+                    'Bastón, Bola de cristal, Grimorio, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Cuchillo, Varita, Grimorio, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Amuleto, Grimorio, Piel para dormir, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.'
+                ],
+                mago_elementalista: [
+                    'Bastón, Bola de cristal, Grimorio, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Cuchillo, Varita, Grimorio, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Amuleto, Grimorio, Piel para dormir, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.'
+                ],
+                mago_mentalista: [
+                    'Bastón, Bola de cristal, Grimorio, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Cuchillo, Varita, Grimorio, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.',
+                    'Amuleto, Grimorio, Piel para dormir, Antorcha, Yesca y pedernal, D6 raciones de comida, D8 monedas de plata.'
+                ],
+                marinero: [
+                    'Daga, Arco corto, Cuerda de cáñamo, Arpeo, Piel para dormir, Antorcha, Yesca y pedernal, D8 raciones de comida, D10 monedas de plata.',
+                    'Cimitarra, Armadura de cuero, Cuerda de cáñamo, Arpeo, Antorcha, Yesca y pedernal, D8 raciones de comida, D10 monedas de plata.',
+                    'Tridente, Catalejo, Cuerda de cáñamo, Arpeo, Antorcha, Yesca y pedernal, D8 raciones de comida, D10 monedas de plata.'
+                ],
+                mercader: [
+                    'Daga, Piel para dormir, Antorcha, Yesca y pedernal, Cuerda de cáñamo, Un burro, D6 raciones de comida, D12 monedas de plata.',
+                    'Cuchillo, Piel para dormir, Linterna, Aceite para lámpara, Yesca y pedernal, Cocina de campaña, Un burro, Un carro, D6 raciones de comida, D12 monedas de plata.',
+                    'Daga, Piel para dormir, Tienda grande, Lámpara, Aceite de lámpara, Yesca y pedernal, Mochila, D6 raciones de comida, D12 monedas de plata.'
+                ]
+            },
+            
+            skills: [
+                // Habilidades generales
+                { id: 'alert', name: 'Alerta', attr: 'INT' },
+                { id: 'craft', name: 'Artesanía', attr: 'FUE' },
+                { id: 'athletics', name: 'Atletismo', attr: 'AGI' },
+                { id: 'beasts', name: 'Bestias', attr: 'INT' },
+                { id: 'riding', name: 'Cabalgar', attr: 'AGI' },
+                { id: 'hunt', name: 'Caza y pesca', attr: 'AGI' },
+                { id: 'healing', name: 'Curación', attr: 'INT' },
+                { id: 'fingers', name: 'Dedos ágiles', attr: 'AGI' },
+                { id: 'discover', name: 'Descubrir', attr: 'INT' },
+                { id: 'deceive', name: 'Engañar', attr: 'CAR' },
+                { id: 'dodge', name: 'Esquivar', attr: 'AGI' },
+                { id: 'languages', name: 'Idiomas', attr: 'INT' },
+                { id: 'perform', name: 'Interpretar', attr: 'CAR' },
+                { id: 'seamanship', name: 'Marinería', attr: 'INT' },
+                { id: 'myths', name: 'Mitos y leyendas', attr: 'INT' },
+                { id: 'swim', name: 'Nadar', attr: 'AGI' },
+                { id: 'persuade', name: 'Persuadir', attr: 'CAR' },
+                { id: 'bargain', name: 'Regatear', attr: 'CAR' },
+                { id: 'stealth', name: 'Sigilo', attr: 'AGI' },
+                { id: 'survival', name: 'Supervivencia', attr: 'INT' },
+                // Habilidades de armas
+                { id: 'bows', name: 'Arcos', attr: 'AGI', weapon: true },
+                { id: 'crossbows', name: 'Ballestas', attr: 'AGI', weapon: true },
+                { id: 'knives', name: 'Cuchillos', attr: 'AGI', weapon: true },
+                { id: 'swords', name: 'Espadas', attr: 'FUE', weapon: true },
+                { id: 'axes', name: 'Hachas', attr: 'FUE', weapon: true },
+                { id: 'slings', name: 'Hondas', attr: 'AGI', weapon: true },
+                { id: 'spears', name: 'Lanzas', attr: 'FUE', weapon: true },
+                { id: 'hammers', name: 'Martillos', attr: 'FUE', weapon: true },
+                { id: 'fight', name: 'Pelea', attr: 'FUE', weapon: true },
+                { id: 'rods', name: 'Varas', attr: 'AGI', weapon: true },
+                // Habilidades mágicas
+                { id: 'animism', name: 'Animismo', attr: 'VOL', magic: true },
+                { id: 'elementalism', name: 'Elementalismo', attr: 'VOL', magic: true },
+                { id: 'mentalism', name: 'Mentalismo', attr: 'VOL', magic: true }
+            ],
+            
+            professionSkills: {
+                artesano: ['craft', 'knives', 'fingers', 'discover', 'swords', 'axes', 'hammers', 'fight'],
+                bardo: ['athletics', 'knives', 'deceive', 'dodge', 'languages', 'perform', 'myths', 'persuade'],
+                caballero: ['beasts', 'riding', 'perform', 'spears', 'swords', 'hammers', 'myths', 'persuade'],
+                cazador: ['alert', 'bows', 'athletics', 'hunt', 'knives', 'slings', 'stealth', 'survival'],
+                erudito: ['alert', 'beasts', 'healing', 'discover', 'dodge', 'languages', 'myths', 'survival'],
+                guerrero: ['bows', 'crossbows', 'swords', 'dodge', 'axes', 'spears', 'hammers', 'fight'],
+                ladron: ['alert', 'athletics', 'knives', 'fingers', 'discover', 'deceive', 'dodge', 'stealth'],
+                mago_animista: ['animism', 'beasts', 'hunt', 'healing', 'dodge', 'stealth', 'survival', 'rods'],
+                mago_elementalista: ['elementalism', 'alert', 'healing', 'discover', 'dodge', 'languages', 'myths', 'rods'],
+                mago_mentalista: ['mentalism', 'alert', 'athletics', 'healing', 'dodge', 'languages', 'myths', 'fight'],
+                marinero: ['alert', 'athletics', 'hunt', 'knives', 'swords', 'languages', 'seamanship', 'swim'],
+                mercader: ['alert', 'knives', 'fingers', 'discover', 'deceive', 'dodge', 'persuade', 'bargain']
+            },
+            
+            weaknesses: [
+                'Crédulo', 'Codicioso', 'Susceptible', 'Temerario', 'Pusilánime', 
+                'Matamonstruos', 'Intolerante', 'Perezoso', 'Glotón', 'Cleptómano', 
+                'Vanidoso', 'Imprudente', 'Miedo a la magia', 'Ansia de conocimientos', 
+                'Naturaleza salvaje', 'Fanfarrón', 'Violento', 'Autoritario', 'Pesimista', 'Altivo'
+            ],
+            
+            appearances: [
+                'Cicatriz', 'Sombrero extraño', 'Pálido', 'Sonriente', 'Mirada fría', 
+                'Barriga', 'Delgado', 'Vello', 'Calvicie', 'Tatuaje', 
+                'Maloliente', 'Peinado', 'Cojera', 'Suciedad', 'Ojos azules', 
+                'Diente de plata', 'Perfume', 'Ojos diferentes', 'Voz susurrante', 'Rostro curtido'
+            ],
+            
+            memories: [
+                'Botas viejas', 'Medallón', 'Carta', 'Diario', 'Brazalete', 
+                'Talla', 'Piedra', 'Moneda', 'Jarra', 'Cuerno', 
+                'Colmillo', 'Dados', 'Guardapelo', 'Llave', 'Mapa', 
+                'Anillo', 'Silbato', 'Sombrero', 'Pluma', 'Pipa'
+            ],
+            
+            raceMovement: {
+                human: 10,
+                halfling: 8,
+                dwarf: 8,
+                elf: 10,
+                anatida: 8,
+                lupino: 12
+            }
+        };
+
+        // Estado de la aplicación
+        const state = {
+            currentPhase: 1,
+            character: {
+                race: null,
+                profession: null,
+                age: null,
+                baseAttributes: {
+                    FUE: 3,
+                    CON: 3,
+                    AGI: 3,
+                    INT: 3,
+                    VOL: 3,
+                    CAR: 3
+                },
+                bonusAttributes: {
+                    FUE: 0,
+                    CON: 0,
+                    AGI: 0,
+                    INT: 0,
+                    VOL: 0,
+                    CAR: 0
+                },
+                points: 60,
+                equipmentPack: null,
+                trainedSkills: [],
+                weakness: null,
+                appearance: null,
+                memory: null,
+                name: ''
+            }
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initPhase1();
+            updateProgressBar();
+            
+            // Añadir evento para el nombre del personaje
+            document.getElementById('character-name').addEventListener('input', function(e) {
+                state.character.name = e.target.value;
+            });
+        });
+
+        // Fase 1: Raza, Profesión y Edad
+        function initPhase1() {
+            // Crear opciones de raza
+            const raceOptions = document.getElementById('race-options');
+            gameData.races.forEach(race => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = race.name;
+                option.dataset.id = race.id;
+                option.onclick = () => selectRace(race.id);
+                raceOptions.appendChild(option);
+            });
+            
+            // Crear opciones de profesión
+            const professionOptions = document.getElementById('profession-options');
+            gameData.professions.forEach(profession => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = profession.name;
+                option.dataset.id = profession.id;
+                option.onclick = () => selectProfession(profession.id);
+                professionOptions.appendChild(option);
+            });
+            
+            // Crear opciones de edad
+            const ageOptions = document.getElementById('age-options');
+            gameData.ages.forEach(age => {
+                const option = document.createElement('div');
+                option.className = 'option';
+                option.textContent = age.name;
+                option.dataset.id = age.id;
+                option.onclick = () => selectAge(age.id);
+                ageOptions.appendChild(option);
+            });
+            
+            // Cargar selectores de fase 5
+            initPhase5Selectors();
+        }
+        
+        function selectRace(raceId) {
+            state.character.race = raceId;
+            
+            // Actualizar UI
+            document.querySelectorAll('#race-options .option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`#race-options .option[data-id="${raceId}"]`).classList.add('selected');
+            
+            // Mostrar descripción
+            const race = gameData.races.find(r => r.id === raceId);
+            document.getElementById('race-description').textContent = `Capacidad Innata: ${race.innate}`;
+            
+            // Si ya hay edad seleccionada, actualizar atributos mínimos
+            if (state.character.age) {
+                updateAttributeMinimums();
+            }
+        }
+        
+        function selectProfession(professionId) {
+            state.character.profession = professionId;
+            
+            // Actualizar UI
+            document.querySelectorAll('#profession-options .option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`#profession-options .option[data-id="${professionId}"]`).classList.add('selected');
+            
+            // Mostrar descripción
+            const profession = gameData.professions.find(p => p.id === professionId);
+            document.getElementById('profession-description').textContent = 
+                `Atributo Clave: ${profession.keyAttr}. Capacidad Heroica: ${profession.heroic}`;
+            
+            // Si ya estamos en fase 2, actualizar la UI de atributos
+            if (state.currentPhase >= 2) {
+                initPhase2();
+            }
+        }
+        
+        function selectAge(ageId) {
+            state.character.age = ageId;
+            
+            // Actualizar UI
+            document.querySelectorAll('#age-options .option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`#age-options .option[data-id="${ageId}"]`).classList.add('selected');
+            
+            // Mostrar descripción
+            const age = gameData.ages.find(a => a.id === ageId);
+            document.getElementById('age-description').textContent = age.desc;
+            
+            // Actualizar atributos base según edad
+            updateAttributeMinimums();
+        }
+        
+        function updateAttributeMinimums() {
+            if (!state.character.age) return;
+            
+            const age = gameData.ages.find(a => a.id === state.character.age);
+            const minValues = age.minValues;
+            
+            // Actualizar atributos base
+            for (const attr in minValues) {
+                state.character.baseAttributes[attr] = minValues[attr];
+            }
+            
+            // Si ya estamos en fase 2, actualizar la UI
+            if (state.currentPhase >= 2) {
+                updateAttributesUI();
+                updateDerivedValues();
+            }
+        }
+
+        // Navegación entre fases
+        function nextPhase() {
+            // Validar fase actual
+            if (!validateCurrentPhase()) return;
+            
+            // Ir a la siguiente fase
+            document.getElementById(`phase-${state.currentPhase}`).classList.remove('active');
+            state.currentPhase++;
+            document.getElementById(`phase-${state.currentPhase}`).classList.add('active');
+            document.getElementById('current-phase').textContent = state.currentPhase;
+            updateProgressBar();
+            
+            // Inicializar la nueva fase si es necesario
+            if (state.currentPhase === 2) initPhase2();
+            if (state.currentPhase === 3) initPhase3();
+            if (state.currentPhase === 4) initPhase4();
+            if (state.currentPhase === 5) initPhase5();
+        }
+        
+        function prevPhase() {
+            // Ir a la fase anterior
+            document.getElementById(`phase-${state.currentPhase}`).classList.remove('active');
+            state.currentPhase--;
+            document.getElementById(`phase-${state.currentPhase}`).classList.add('active');
+            document.getElementById('current-phase').textContent = state.currentPhase;
+            updateProgressBar();
+        }
+        
+        function updateProgressBar() {
+            const progress = (state.currentPhase / 5) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+        
+        function validateCurrentPhase() {
+            switch(state.currentPhase) {
+                case 1:
+                    if (!state.character.race || !state.character.profession || !state.character.age) {
+                        alert('Debes seleccionar raza, profesión y edad antes de continuar.');
+                        return false;
+                    }
+                    return true;
+                case 2:
+                    if (state.character.points > 0) {
+                        alert('Debes gastar todos los puntos de atributo antes de continuar.');
+                        return false;
+                    }
+                    return true;
+                case 3:
+                    if (state.character.equipmentPack === null) {
+                        alert('Debes seleccionar un paquete de equipo antes de continuar.');
+                        return false;
+                    }
+                    return true;
+                case 4:
+                    const age = gameData.ages.find(a => a.id === state.character.age);
+                    const expectedSkills = 6 + age.skillBonus;
+                    
+                    if (state.character.trainedSkills.length !== expectedSkills) {
+                        alert(`Debes seleccionar exactamente ${expectedSkills} habilidades.`);
+                        return false;
+                    }
+                    
+                    // Verificar que al menos 6 sean de profesión
+                    const professionSkillIds = gameData.professionSkills[state.character.profession] || [];
+                    const trainedProfessionalSkills = state.character.trainedSkills.filter(id => 
+                        professionSkillIds.includes(id)
+                    ).length;
+                    
+                    if (trainedProfessionalSkills < 6) {
+                        alert(`Debes seleccionar al menos 6 habilidades de tu profesión. Actualmente tienes ${trainedProfessionalSkills}.`);
+                        return false;
+                    }
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        // Fase 2: Atributos
+        function initPhase2() {
+            const attributesContainer = document.getElementById('attributes-container');
+            attributesContainer.innerHTML = '';
+            
+            // Crear controles para cada atributo
+            const attributes = ['FUE', 'CON', 'AGI', 'INT', 'VOL', 'CAR'];
+            const profession = gameData.professions.find(p => p.id === state.character.profession);
+            
+            attributes.forEach(attr => {
+                const attributeDiv = document.createElement('div');
+                attributeDiv.className = 'attribute';
+                
+                // Marcar atributo clave
+                let keyIndicator = '';
+                if (profession && profession.keyAttr === attr) {
+                    keyIndicator = '<div class="attribute-key">Clave</div>';
+                }
+                
+                attributeDiv.innerHTML = `
+                    ${keyIndicator}
+                    <div class="attribute-name">${getAttributeName(attr)}</div>
+                    <div class="attribute-value" id="attr-${attr}">${getTotalAttribute(attr)}</div>
+                    <div class="attribute-controls">
+                        <button class="attr-btn" onclick="changeAttribute('${attr}', -1)">-</button>
+                        <button class="attr-btn" onclick="changeAttribute('${attr}', 1)">+</button>
+                    </div>
+                    <button class="max-btn" onclick="maxAttribute('${attr}')">Máx.</button>
+                `;
+                attributesContainer.appendChild(attributeDiv);
+            });
+            
+            // Actualizar UI
+            updateAttributesUI();
+            updateDerivedValues();
+        }
+        
+        function getAttributeName(attr) {
+            const names = {
+                FUE: 'Fuerza',
+                CON: 'Constitución',
+                AGI: 'Agilidad',
+                INT: 'Inteligencia',
+                VOL: 'Voluntad',
+                CAR: 'Carisma'
+            };
+            return `${names[attr]} (${attr})`;
+        }
+        
+        function getTotalAttribute(attr) {
+            return state.character.baseAttributes[attr] + state.character.bonusAttributes[attr];
+        }
+        
+        function changeAttribute(attr, delta) {
+            // Verificar límites
+            if (delta > 0) {
+                // Incrementar
+                if (getTotalAttribute(attr) >= 18) return;
+                if (state.character.points <= 0) return;
+                state.character.bonusAttributes[attr]++;
+                state.character.points--;
+            } else {
+                // Decrementar
+                if (state.character.bonusAttributes[attr] <= 0) return;
+                
+                state.character.bonusAttributes[attr]--;
+                state.character.points++;
+            }
+            
+            // Actualizar UI
+            updateAttributesUI();
+            updateDerivedValues();
+        }
+        
+        function maxAttribute(attr) {
+            // Calcular cuántos puntos podemos asignar
+            const current = getTotalAttribute(attr);
+            const maxPossible = Math.min(18, current + state.character.points);
+            const pointsToAdd = maxPossible - current;
+            
+            if (pointsToAdd > 0) {
+                state.character.bonusAttributes[attr] += pointsToAdd;
+                state.character.points -= pointsToAdd;
+                updateAttributesUI();
+                updateDerivedValues();
+            }
+        }
+        
+        function randomAttributes() {
+            // Reiniciar bonus
+            for (const attr in state.character.bonusAttributes) {
+                state.character.bonusAttributes[attr] = 0;
+            }
+            
+            let points = 60;
+            const attrs = ['FUE', 'CON', 'AGI', 'INT', 'VOL', 'CAR'];
+            
+            // Distribuir puntos aleatoriamente
+            while (points > 0) {
+                const randomAttr = attrs[Math.floor(Math.random() * attrs.length)];
+                if (getTotalAttribute(randomAttr) < 18) {
+                    state.character.bonusAttributes[randomAttr]++;
+                    points--;
+                }
+            }
+            
+            state.character.points = 0;
+            updateAttributesUI();
+            updateDerivedValues();
+        }
+        
+        function updateAttributesUI() {
+            // Actualizar valores de atributos
+            for (const attr in state.character.baseAttributes) {
+                document.getElementById(`attr-${attr}`).textContent = getTotalAttribute(attr);
+            }
+            
+            // Actualizar puntos disponibles
+            document.getElementById('points-available').textContent = state.character.points;
+            
+            // Actualizar estado de botones
+            const attributes = ['FUE', 'CON', 'AGI', 'INT', 'VOL', 'CAR'];
+            attributes.forEach(attr => {
+                // Botón -
+                const minusBtn = document.querySelector(`.attribute-controls button[onclick*="changeAttribute('${attr}', -1)"]`);
+                if (minusBtn) {
+                    minusBtn.disabled = state.character.bonusAttributes[attr] <= 0;
+                }
+                
+                // Botón +
+                const plusBtn = document.querySelector(`.attribute-controls button[onclick*="changeAttribute('${attr}', 1)"]`);
+                if (plusBtn) {
+                    plusBtn.disabled = getTotalAttribute(attr) >= 18 || state.character.points <= 0;
+                }
+                
+                // Botón Máx.
+                const maxBtn = document.querySelector(`.max-btn[onclick*="maxAttribute('${attr}')"]`);
+                if (maxBtn) {
+                    maxBtn.disabled = getTotalAttribute(attr) >= 18 || state.character.points <= 0;
+                }
+            });
+        }
+        
+        function updateDerivedValues() {
+            const derivedValues = document.getElementById('derived-values');
+            derivedValues.innerHTML = '';
+            
+            // Calcular valores derivados
+            const hp = getTotalAttribute('CON'); // PG
+            const wp = getTotalAttribute('VOL'); // PV
+            
+            // Bonificación de daño FUE
+            let dmgFue = '0';
+            const fue = getTotalAttribute('FUE');
+            if (fue >= 13 && fue <= 16) dmgFue = '+D4';
+            if (fue >= 17) dmgFue = '+D6';
+            
+            // Bonificación de daño AGI
+            let dmgAgi = '0';
+            const agi = getTotalAttribute('AGI');
+            if (agi >= 13 && agi <= 16) dmgAgi = '+D4';
+            if (agi >= 17) dmgAgi = '+D6';
+            
+            // Movimiento
+            let movement = gameData.raceMovement[state.character.race] || 10;
+            if (agi >= 1 && agi <= 6) movement -= 4;
+            if (agi >= 7 && agi <= 9) movement -= 2;
+            if (agi >= 13 && agi <= 15) movement += 2;
+            if (agi >= 16 && agi <= 18) movement += 4;
+            
+            // Límite de carga
+            const carryLimit = Math.ceil(fue / 2);
+            
+            // Crear elementos HTML
+            const derivedData = [
+                { name: 'PG (Puntos de Golpe)', value: hp },
+                { name: 'PV (Puntos de Voluntad)', value: wp },
+                { name: 'Bonif. Daño FUE', value: dmgFue },
+                { name: 'Bonif. Daño AGI', value: dmgAgi },
+                { name: 'Movimiento', value: movement },
+                { name: 'Límite de Carga', value: carryLimit }
+            ];
+            
+            derivedData.forEach(data => {
+                const div = document.createElement('div');
+                div.className = 'derived-value';
+                div.innerHTML = `
+                    <div class="derived-name">${data.name}</div>
+                    <div class="derived-result">${data.value}</div>
+                `;
+                derivedValues.appendChild(div);
+            });
+        }
+
+        // Fase 3: Equipo
+        function initPhase3() {
+            const equipmentPacks = document.getElementById('equipment-packs');
+            equipmentPacks.innerHTML = '';
+            
+            // Obtener paquetes para la profesión seleccionada
+            const packs = gameData.equipmentPacks[state.character.profession] || [];
+            
+            // Crear elementos para cada paquete
+            packs.forEach((pack, index) => {
+                const packDiv = document.createElement('div');
+                packDiv.className = 'equipment-pack';
+                if (state.character.equipmentPack === index) {
+                    packDiv.classList.add('selected');
+                }
+                packDiv.onclick = () => selectEquipmentPack(index);
+                
+                packDiv.innerHTML = `
+                    <h4>Paquete ${index + 1}</h4>
+                    <ul class="equipment-list">
+                        ${pack.split(', ').map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                `;
+                
+                equipmentPacks.appendChild(packDiv);
+            });
+            
+            // Añadir botón aleatorio
+            const randomButton = document.createElement('button');
+            randomButton.className = 'btn btn-random';
+            randomButton.textContent = 'Seleccionar Aleatorio';
+            randomButton.onclick = () => {
+                const packs = gameData.equipmentPacks[state.character.profession] || [];
+                if (packs.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * packs.length);
+                    selectEquipmentPack(randomIndex);
+                }
+            };
+            
+            equipmentPacks.parentNode.insertBefore(randomButton, equipmentPacks);
+        }
+        
+        function selectEquipmentPack(index) {
+            state.character.equipmentPack = index;
+            
+            // Actualizar UI
+            document.querySelectorAll('.equipment-pack').forEach((pack, i) => {
+                if (i === index) {
+                    pack.classList.add('selected');
+                } else {
+                    pack.classList.remove('selected');
+                }
+            });
+        }
+
+        // Fase 4: Habilidades
+        function initPhase4() {
+            const skillsInfo = document.getElementById('skills-info');
+            const age = gameData.ages.find(a => a.id === state.character.age);
+            const expectedSkills = 6 + age.skillBonus;
+            const professionSkillIds = gameData.professionSkills[state.character.profession] || [];
+            const trainedProfessionalSkills = state.character.trainedSkills.filter(id => 
+                professionSkillIds.includes(id)
+            ).length;
+            const trainedFreeSkills = state.character.trainedSkills.filter(id => 
+                !professionSkillIds.includes(id)
+            ).length;
+            
+            skillsInfo.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <button class="btn btn-random" onclick="randomSkills()">Seleccionar Aleatorio</button>
+                </div>
+                <p><strong>Debes entrenar ${expectedSkills} habilidades:</strong></p>
+                <p>• <strong>Mínimo 6 habilidades de tu profesión</strong> (resaltadas en verde claro)</p>
+                <p>• <strong>${age.skillBonus} habilidades adicionales</strong> (pueden ser de tu lista de profesión o de cualquier otra)</p>
+                <p>• Las habilidades entrenadas tienen fondo verde oscuro y están en negrita</p>
+                <p><strong>Habilidades de profesión seleccionadas:</strong> <span id="prof-skills-count">${trainedProfessionalSkills}</span>/6+ (mínimo 6)</p>
+                <p><strong>Habilidades libres seleccionadas:</strong> <span id="free-skills-count">${trainedFreeSkills}</span>/${age.skillBonus}</p>
+                <p><strong>Total seleccionadas:</strong> <span id="total-skills-count">${state.character.trainedSkills.length}</span>/${expectedSkills}</p>
+                <p><em>Nota: Las habilidades mágicas requeridas para magos se seleccionan automáticamente.</em></p>
+            `;
+            
+            // Crear lista de habilidades
+            const skillsContainer = document.getElementById('skills-container');
+            skillsContainer.innerHTML = '';
+            
+            // Separar habilidades por tipo
+            const generalSkills = gameData.skills.filter(skill => !skill.weapon && !skill.magic);
+            const weaponSkills = gameData.skills.filter(skill => skill.weapon);
+            const magicSkills = gameData.skills.filter(skill => skill.magic);
+            
+            // Habilidades generales
+            const generalGroup = document.createElement('div');
+            generalGroup.className = 'skill-group';
+            generalGroup.innerHTML = '<h3>Habilidades Generales</h3>';
+            skillsContainer.appendChild(generalGroup);
+            
+            generalSkills.forEach(skill => {
+                createSkillElement(skill, professionSkillIds, generalGroup);
+            });
+            
+            // Habilidades de armas
+            const weaponGroup = document.createElement('div');
+            weaponGroup.className = 'skill-group';
+            weaponGroup.innerHTML = '<h3>Habilidades de Armas</h3>';
+            skillsContainer.appendChild(weaponGroup);
+            
+            weaponSkills.forEach(skill => {
+                createSkillElement(skill, professionSkillIds, weaponGroup);
+            });
+            
+            // Habilidades mágicas
+            if (magicSkills.length > 0) {
+                const magicGroup = document.createElement('div');
+                magicGroup.className = 'skill-group';
+                magicGroup.innerHTML = '<h3>Habilidades Mágicas</h3>';
+                skillsContainer.appendChild(magicGroup);
+                
+                magicSkills.forEach(skill => {
+                    createSkillElement(skill, professionSkillIds, magicGroup);
+                });
+            }
+            
+            updateSkillsCount();
+        }
+        
+        function createSkillElement(skill, professionSkillIds, container) {
+            // Calcular nivel inicial
+            const attrValue = getTotalAttribute(skill.attr);
+            let baseValue = 3;
+            if (attrValue >= 6 && attrValue <= 8) baseValue = 4;
+            if (attrValue >= 9 && attrValue <= 12) baseValue = 5;
+            if (attrValue >= 13 && attrValue <= 15) baseValue = 6;
+            if (attrValue >= 16 && attrValue <= 18) baseValue = 7;
+            
+            // Valor entrenado es el doble
+            const trainedValue = baseValue * 2;
+            
+            // Verificar si es habilidad de profesión
+            const isProfessional = professionSkillIds.includes(skill.id);
+            
+            // Verificar si es habilidad requerida (magia para magos)
+            const isRequired = (skill.magic && state.character.profession.includes('mago') && 
+                              ((state.character.profession === 'mago_animista' && skill.id === 'animism') ||
+                               (state.character.profession === 'mago_elementalista' && skill.id === 'elementalism') ||
+                               (state.character.profession === 'mago_mentalista' && skill.id === 'mentalism')));
+            
+            // Verificar si está entrenada
+            const isTrained = state.character.trainedSkills.includes(skill.id);
+            
+            const skillDiv = document.createElement('div');
+            skillDiv.className = 'skill';
+            
+            // Aplicar clases según el tipo de habilidad
+            if (isProfessional) {
+                skillDiv.classList.add('professional');
+            }
+            
+            if (isTrained) {
+                skillDiv.classList.add('trained');
+            }
+            
+            if (isRequired) {
+                skillDiv.classList.add('required');
+                if (!isTrained) {
+                    // Añadir automáticamente habilidades mágicas requeridas
+                    state.character.trainedSkills.push(skill.id);
+                    skillDiv.classList.add('trained');
+                }
+            }
+            
+            // Permitir clic en todas las habilidades excepto las requeridas
+            if (!isRequired) {
+                skillDiv.onclick = () => toggleSkill(skill.id, isProfessional);
+            }
+            
+            skillDiv.innerHTML = `
+                <div class="skill-name">${skill.name} (${skill.attr})</div>
+                <div class="skill-value">${isTrained ? trainedValue : baseValue}</div>
+            `;
+            
+            container.appendChild(skillDiv);
+        }
+        
+        function toggleSkill(skillId, isProfessional) {
+            const age = gameData.ages.find(a => a.id === state.character.age);
+            const expectedSkills = 6 + age.skillBonus;
+            const professionSkillIds = gameData.professionSkills[state.character.profession] || [];
+            
+            const trainedProfessionalSkills = state.character.trainedSkills.filter(id => 
+                professionSkillIds.includes(id)
+            ).length;
+            
+            const trainedFreeSkills = state.character.trainedSkills.filter(id => 
+                !professionSkillIds.includes(id)
+            ).length;
+            
+            if (state.character.trainedSkills.includes(skillId)) {
+                // Quitar habilidad - CORREGIDO: Permitir quitar habilidades de profesión
+                state.character.trainedSkills = state.character.trainedSkills.filter(id => id !== skillId);
+            } else {
+                // Añadir habilidad
+                if (state.character.trainedSkills.length >= expectedSkills) {
+                    alert(`Ya has entrenado ${expectedSkills} habilidades. Debes quitar una antes de añadir otra.`);
+                    return;
+                }
+                
+                // Verificar límites por tipo de habilidad
+                if (isProfessional) {
+                    // Puede añadir habilidades de profesión sin límite (excepto el total)
+                    state.character.trainedSkills.push(skillId);
+                } else {
+                    // Verificar límite de habilidades libres
+                    if (trainedFreeSkills >= age.skillBonus) {
+                        alert(`Ya has seleccionado ${age.skillBonus} habilidades libres. Selecciona una habilidad de tu profesión o quita una libre primero.`);
+                        return;
+                    }
+                    state.character.trainedSkills.push(skillId);
+                }
+            }
+            
+            // Actualizar UI
+            initPhase4();
+        }
+        
+        function randomSkills() {
+            const age = gameData.ages.find(a => a.id === state.character.age);
+            const expectedSkills = 6 + age.skillBonus;
+            const professionSkillIds = gameData.professionSkills[state.character.profession] || [];
+            
+            // Limpiar habilidades actuales
+            state.character.trainedSkills = [];
+            
+            // 1. Seleccionar 6 habilidades de profesión aleatorias
+            const shuffledProfessionSkills = [...professionSkillIds].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < Math.min(6, shuffledProfessionSkills.length); i++) {
+                state.character.trainedSkills.push(shuffledProfessionSkills[i]);
+            }
+            
+            // 2. Seleccionar habilidades adicionales según edad
+            const additionalSkillsCount = age.skillBonus;
+            
+            // Determinar cuántas habilidades adicionales serán de profesión y cuántas libres
+            // Pueden ser todas de profesión, todas libres, o una mezcla
+            const allSkillIds = gameData.skills.map(s => s.id);
+            const availableSkills = allSkillIds.filter(id => 
+                !state.character.trainedSkills.includes(id)
+            );
+            
+            // Seleccionar habilidades adicionales aleatorias
+            const shuffledAvailableSkills = [...availableSkills].sort(() => 0.5 - Math.random());
+            for (let i = 0; i < Math.min(additionalSkillsCount, shuffledAvailableSkills.length); i++) {
+                state.character.trainedSkills.push(shuffledAvailableSkills[i]);
+            }
+            
+            // Actualizar UI
+            initPhase4();
+        }
+        
+        function updateSkillsCount() {
+            const age = gameData.ages.find(a => a.id === state.character.age);
+            const expectedSkills = 6 + age.skillBonus;
+            const professionSkillIds = gameData.professionSkills[state.character.profession] || [];
+            
+            const trainedProfessionalSkills = state.character.trainedSkills.filter(id => 
+                professionSkillIds.includes(id)
+            ).length;
+            
+            const trainedFreeSkills = state.character.trainedSkills.filter(id => 
+                !professionSkillIds.includes(id)
+            ).length;
+            
+            document.getElementById('prof-skills-count').textContent = trainedProfessionalSkills;
+            document.getElementById('free-skills-count').textContent = trainedFreeSkills;
+            document.getElementById('total-skills-count').textContent = state.character.trainedSkills.length;
+        }
+
+        // Fase 5: Características Finales
+        function initPhase5() {
+            updatePhase5Selections();
+        }
+        
+        function initPhase5Selectors() {
+            // Llenar selectores
+            const weaknessSelect = document.getElementById('weakness-select');
+            gameData.weaknesses.forEach(weakness => {
+                const option = document.createElement('option');
+                option.value = weakness;
+                option.textContent = weakness;
+                weaknessSelect.appendChild(option);
+            });
+            weaknessSelect.onchange = (e) => state.character.weakness = e.target.value;
+            
+            const appearanceSelect = document.getElementById('appearance-select');
+            gameData.appearances.forEach(appearance => {
+                const option = document.createElement('option');
+                option.value = appearance;
+                option.textContent = appearance;
+                appearanceSelect.appendChild(option);
+            });
+            appearanceSelect.onchange = (e) => state.character.appearance = e.target.value;
+            
+            const memorySelect = document.getElementById('memory-select');
+            gameData.memories.forEach(memory => {
+                const option = document.createElement('option');
+                option.value = memory;
+                option.textContent = memory;
+                memorySelect.appendChild(option);
+            });
+            memorySelect.onchange = (e) => state.character.memory = e.target.value;
+        }
+        
+        function updatePhase5Selections() {
+            // Seleccionar valores aleatorios por defecto si no hay selección
+            if (!state.character.weakness) {
+                state.character.weakness = gameData.weaknesses[Math.floor(Math.random() * gameData.weaknesses.length)];
+            }
+            if (!state.character.appearance) {
+                state.character.appearance = gameData.appearances[Math.floor(Math.random() * gameData.appearances.length)];
+            }
+            if (!state.character.memory) {
+                state.character.memory = gameData.memories[Math.floor(Math.random() * gameData.memories.length)];
+            }
+            
+            // Actualizar selectores
+            document.getElementById('weakness-select').value = state.character.weakness;
+            document.getElementById('appearance-select').value = state.character.appearance;
+            document.getElementById('memory-select').value = state.character.memory;
+        }
+        
+        function randomWeakness() {
+            state.character.weakness = gameData.weaknesses[Math.floor(Math.random() * gameData.weaknesses.length)];
+            document.getElementById('weakness-select').value = state.character.weakness;
+        }
+        
+        function randomAppearance() {
+            state.character.appearance = gameData.appearances[Math.floor(Math.random() * gameData.appearances.length)];
+            document.getElementById('appearance-select').value = state.character.appearance;
+        }
+        
+        function randomMemory() {
+            state.character.memory = gameData.memories[Math.floor(Math.random() * gameData.memories.length)];
+            document.getElementById('memory-select').value = state.character.memory;
+        }
+
+        // Funciones aleatorias
+        function randomRace() {
+            const randomIndex = Math.floor(Math.random() * gameData.races.length);
+            selectRace(gameData.races[randomIndex].id);
+        }
+        
+        function randomProfession() {
+            const randomIndex = Math.floor(Math.random() * gameData.professions.length);
+            selectProfession(gameData.professions[randomIndex].id);
+        }
+        
+        function randomAge() {
+            const randomIndex = Math.floor(Math.random() * gameData.ages.length);
+            selectAge(gameData.ages[randomIndex].id);
+        }
+        
+        function randomAll() {
+            randomRace();
+            randomProfession();
+            randomAge();
+            
+            // Si ya estamos en fase 2 o posterior, también randomizar atributos
+            if (state.currentPhase >= 2) {
+                randomAttributes();
+            }
+            
+            // Si estamos en fase 3 o posterior, randomizar equipo
+            if (state.currentPhase >= 3) {
+                const packs = gameData.equipmentPacks[state.character.profession] || [];
+                if (packs.length > 0) {
+                    const randomPack = Math.floor(Math.random() * packs.length);
+                    selectEquipmentPack(randomPack);
+                }
+            }
+            
+            // Si estamos en fase 4 o posterior, randomizar habilidades
+            if (state.currentPhase >= 4) {
+                randomSkills();
+            }
+            
+            // Si estamos en fase 5, randomizar características
+            if (state.currentPhase >= 5) {
+                randomWeakness();
+                randomAppearance();
+                randomMemory();
+                
+                // Generar nombre aleatorio
+                const names = ['Aric', 'Borin', 'Cedric', 'Darian', 'Eldrin', 'Fenris', 'Gareth', 'Halvar', 'Ivor', 'Jarek', 
+                              'Kael', 'Lorik', 'Mikhail', 'Nolan', 'Orin', 'Pavel', 'Quinn', 'Rurik', 'Soren', 'Torin',
+                              'Althea', 'Brynn', 'Celia', 'Drusilla', 'Elara', 'Freya', 'Gwyneth', 'Helena', 'Isolde', 'Jocelyn',
+                              'Katarina', 'Lyra', 'Morgan', 'Niamh', 'Ophélie', 'Rhiannon', 'Seraphina', 'Thalia', 'Una', 'Vivienne'];
+                state.character.name = names[Math.floor(Math.random() * names.length)];
+                document.getElementById('character-name').value = state.character.name;
+            }
+        }
+
+        // Resumen y exportación
+        function showSummary() {
+            // Validar fase 5
+            if (!validateCurrentPhase()) return;
+            
+            // Mostrar alerta
+            document.getElementById('export-alert').classList.add('active');
+            
+            // Actualizar resumen
+            updateSummary();
+            
+            // Mostrar resumen
+            document.getElementById('phase-5').classList.remove('active');
+            document.getElementById('character-summary').classList.add('active');
+        }
+        
+        function hideSummary() {
+            document.getElementById('character-summary').classList.remove('active');
+            document.getElementById('phase-5').classList.add('active');
+        }
+        
+        function updateSummary() {
+            // Información básica
+            const race = gameData.races.find(r => r.id === state.character.race);
+            const profession = gameData.professions.find(p => p.id === state.character.profession);
+            const age = gameData.ages.find(a => a.id === state.character.age);
+            
+            document.getElementById('summary-name').textContent = state.character.name || 'Sin nombre';
+            document.getElementById('summary-name-text').textContent = state.character.name || 'Sin nombre';
+            document.getElementById('summary-race').textContent = race.name;
+            document.getElementById('summary-innate').textContent = race.innate;
+            document.getElementById('summary-profession').textContent = profession.name;
+            document.getElementById('summary-heroic').textContent = profession.heroic;
+            document.getElementById('summary-age').textContent = `${age.name}`;
+            
+            // Nota sobre magos en información básica - CORREGIDO
+            const magicNoteContainer = document.getElementById('summary-magic-note');
+            magicNoteContainer.innerHTML = '';
+            
+            if (state.character.profession.includes('mago')) {
+                const magicNote = document.createElement('p');
+                magicNote.innerHTML = `<strong>Nota para Magos:</strong> Como ${profession.name.toLowerCase()}, recibes 3 Trucos y 3 Hechizos de Rango 1 de tu escuela (${getMagicSchoolName(state.character.profession)}) o de magia común.`;
+                magicNote.style.marginTop = '10px';
+                magicNote.style.padding = '8px';
+                magicNote.style.backgroundColor = 'rgba(201, 169, 89, 0.3)';
+                magicNote.style.borderRadius = '4px';
+                magicNote.style.fontSize = '0.9rem';
+                magicNoteContainer.appendChild(magicNote);
+            }
+            
+            // Atributos
+            document.getElementById('summary-fue').textContent = getTotalAttribute('FUE');
+            document.getElementById('summary-con').textContent = getTotalAttribute('CON');
+            document.getElementById('summary-agi').textContent = getTotalAttribute('AGI');
+            document.getElementById('summary-int').textContent = getTotalAttribute('INT');
+            document.getElementById('summary-vol').textContent = getTotalAttribute('VOL');
+            document.getElementById('summary-car').textContent = getTotalAttribute('CAR');
+            
+            // Valores derivados
+            const hp = getTotalAttribute('CON');
+            const wp = getTotalAttribute('VOL');
+            
+            let dmgFue = '0';
+            const fue = getTotalAttribute('FUE');
+            if (fue >= 13 && fue <= 16) dmgFue = '+D4';
+            if (fue >= 17) dmgFue = '+D6';
+            
+            let dmgAgi = '0';
+            const agi = getTotalAttribute('AGI');
+            if (agi >= 13 && agi <= 16) dmgAgi = '+D4';
+            if (agi >= 17) dmgAgi = '+D6';
+            
+            let movement = gameData.raceMovement[state.character.race] || 10;
+            if (agi >= 1 && agi <= 6) movement -= 4;
+            if (agi >= 7 && agi <= 9) movement -= 2;
+            if (agi >= 13 && agi <= 15) movement += 2;
+            if (agi >= 16 && agi <= 18) movement += 4;
+            
+            const carryLimit = Math.ceil(fue / 2);
+            
+            document.getElementById('summary-pg').textContent = hp;
+            document.getElementById('summary-pv').textContent = wp;
+            document.getElementById('summary-dmg-fue').textContent = dmgFue;
+            document.getElementById('summary-dmg-agi').textContent = dmgAgi;
+            document.getElementById('summary-move').textContent = movement;
+            document.getElementById('summary-carry').textContent = carryLimit;
+            
+            // Todas las habilidades - CORREGIDO: sin cursiva ni color verde
+            const allSkillsSummary = document.getElementById('summary-all-skills');
+            allSkillsSummary.innerHTML = '';
+            
+            // Ordenar habilidades alfabéticamente
+            const sortedSkills = [...gameData.skills].sort((a, b) => a.name.localeCompare(b.name));
+            const professionSkillIds = gameData.professionSkills[state.character.profession] || [];
+            
+            sortedSkills.forEach(skill => {
+                const attrValue = getTotalAttribute(skill.attr);
+                let baseValue = 3;
+                if (attrValue >= 6 && attrValue <= 8) baseValue = 4;
+                if (attrValue >= 9 && attrValue <= 12) baseValue = 5;
+                if (attrValue >= 13 && attrValue <= 15) baseValue = 6;
+                if (attrValue >= 16 && attrValue <= 18) baseValue = 7;
+                
+                const trainedValue = baseValue * 2;
+                const isTrained = state.character.trainedSkills.includes(skill.id);
+                
+                // Mostrar solo el valor final (entrenado si está entrenada, base si no)
+                const finalValue = isTrained ? trainedValue : baseValue;
+                
+                const skillDiv = document.createElement('div');
+                skillDiv.style.marginBottom = '5px';
+                
+                // Solo negrita para habilidades entrenadas
+                if (isTrained) {
+                    skillDiv.innerHTML = `<strong>${skill.name}: ${finalValue}</strong>`;
+                } else {
+                    skillDiv.textContent = `${skill.name}: ${finalValue}`;
+                }
+                
+                // CORREGIDO: Eliminado el estilo cursiva y verde para habilidades de profesión no entrenadas
+                // Ahora todas las habilidades tienen el mismo estilo visual
+                
+                allSkillsSummary.appendChild(skillDiv);
+            });
+            
+            // Equipo
+            const equipmentSummary = document.getElementById('summary-equipment');
+            equipmentSummary.innerHTML = '';
+            
+            if (state.character.equipmentPack !== null) {
+                const packs = gameData.equipmentPacks[state.character.profession] || [];
+                if (packs[state.character.equipmentPack]) {
+                    const items = packs[state.character.equipmentPack].split(', ');
+                    items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.textContent = `• ${item}`;
+                        equipmentSummary.appendChild(itemDiv);
+                    });
+                }
+            }
+            
+            // Características
+            document.getElementById('summary-weakness').textContent = state.character.weakness || 'No seleccionada';
+            document.getElementById('summary-appearance').textContent = state.character.appearance || 'No seleccionada';
+            document.getElementById('summary-memory').textContent = state.character.memory || 'No seleccionada';
+        }
+        
+        // Función auxiliar para obtener el nombre de la escuela mágica
+        function getMagicSchoolName(professionId) {
+            const schoolNames = {
+                'mago_animista': 'Animismo',
+                'mago_elementalista': 'Elementalismo',
+                'mago_mentalista': 'Mentalismo'
+            };
+            return schoolNames[professionId] || 'Magia';
+        }
+    </script>
+</body>
+</html>
